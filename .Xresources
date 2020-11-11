@@ -1,0 +1,112 @@
+!! Color scheme
+!------------------------------------------------------------------------------
+
+!! Use this color for bold
+!URxvt.colorBD: #EAEAEA
+
+!! Use this color for italics
+!URxvt.colorIT: #EAEAEA
+
+!! Use this color for underlined text
+!URxvt.colorUL: #ef5350
+! Dracula Xresources palette
+*.foreground: #F8F8F2
+*.background: #282A36
+*.color0:     #000000
+*.color8:     #4D4D4D
+*.color1:     #FF5555
+*.color9:     #FF6E67
+*.color2:     #50FA7B
+*.color10:    #5AF78E
+*.color3:     #F1FA8C
+*.color11:    #F4F99D
+*.color4:     #BD93F9
+*.color12:    #CAA9FA
+*.color5:     #FF79C6
+*.color13:    #FF92D0
+*.color6:     #8BE9FD
+*.color14:    #9AEDFE
+*.color7:     #BFBFBF
+*.color15:    #E6E6E6
+
+! Font
+!------------------------------------------------------------------------------
+URxvt.font: xft:FiraCode Nerd Font Mono:style=Retina:pixelsize=16
+URxvt.boldFont: xft:FiraCode Nerd Font Mono:style=Bold:pixelsize:16
+URxvt.italicFont: xft:FiraCode Nerd Font Mono:style=Light:pixelsize:16
+! Gneral config
+! -----------------------------------------------------------------------------
+
+! Copy paste
+URxvt.iso14755:                   false
+URxvt.keysym.Shift-Control-V: 	eval:paste_clipboard
+URxvt.keysym.Shift-Control-C: 	eval:selection_to_clipboard
+
+URxvt.depth:                      32
+URxvt.background:                 [100]#222D31
+URxvt*scrollBar:                  false
+URxvt*mouseWheelScrollPage:       false
+URxvt*cursorBlink:                true
+URxvt*background:                 black
+URxvt*foreground:                 grey
+URxvt*saveLines:                  5000
+
+! Transparency without compton
+URxvt*inheritPixmap:            true
+URxvt*transparent:              true
+URxvt*shading:                  20
+
+
+!! Extensions
+!------------------------------------------------------------------------------
+
+URxvt.perl-ext-common: default,matcher,resize-font,
+
+! Url matching ****************************************************************
+URxvt.url-launcher: /usr/bin/xdg-open
+URxvt.matcher.button: 1
+URxvt.keysym.C-Delete: perl:matcher:last
+URxvt.keysym.M-Delete: perl:matcher:list
+URxvt.matcher.rend.0: Uline Bold fg5
+
+! Url select ******************************************************************
+!URxvt.keysym.M-u: perl:url-select:select_next
+!URxvt.url-select.launcher: /usr/bin/xdg-open
+!URxvt.url-select.underline: true
+
+! Tabbed **********************************************************************
+!URxvt.tabbed.tabbar-fg: 2
+!URxvt.tabbed.tabbar-bg: 0
+!URxvt.tabbed.tab-fg: 3
+!URxvt.tabbed.tab-bg: 0
+
+! resize-font *****************************************************************
+!URxvt.iso14755: false
+!URxvt.iso14755_52: false
+URxvt.keysym.C-minus`:  resize-font:smaller
+URxvt.keysym.C-equal:  resize-font:bigger
+
+
+!------------------------------------------------------------------------------
+
+Xft.dpi:       96
+Xft.antialias: true
+Xft.hinting:   true
+Xft.rgba:      rgb
+Xft.autohint:  false
+Xft.hintstyle: hintslight
+Xft.lcdfilter: lcddefault
+
+XTerm*background:        #222D31
+XTerm*foreground:        #d8d8d8
+XTerm*pointerColor:      #1ABB9B
+XTerm*faceName:          Fixed
+XTerm*faceSize:          11
+XTerm*reverseVideo:      on
+XTerm*selectToClipboard: true
+
+*fading:                          8
+*fadeColor:                       black
+*pointerColorBackground:          #2B2C2B
+*pointerColorForeground:          #16A085
+
