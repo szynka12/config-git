@@ -32,9 +32,9 @@
 
 ! Font
 !------------------------------------------------------------------------------
-URxvt.font: xft:FiraCode Nerd Font Mono:style=Retina:pixelsize=16
-URxvt.boldFont: xft:FiraCode Nerd Font Mono:style=Bold:pixelsize:16
-URxvt.italicFont: xft:FiraCode Nerd Font Mono:style=Light:pixelsize:16
+URxvt.font: xft:FiraCode Nerd Font Mono:style=Retina:pixelsize=24
+URxvt.boldFont: xft:FiraCode Nerd Font Mono:style=Bold:pixelsize:24
+URxvt.italicFont: xft:FiraCode Nerd Font Mono:style=Light:pixelsize:24
 ! Gneral config
 ! -----------------------------------------------------------------------------
 
