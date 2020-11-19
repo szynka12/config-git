@@ -3,21 +3,21 @@
 
 # Setting varibles and machine specific things
 set $mod Mod4
-set $lock /home/wsadowski/.config/config-git/i3/i3exit.sh
+set $lock /home/sadowski/.config/config-git/i3/i3exit.sh
 set $term urxvt
 set $spotify flatpak
 bindsym $mod+d exec "dmenu_run -nf '#F8F8F2' -nb '#282A36' -sb '#6272A4' -sf '#F8F8F2' -fn 'monospace-16' -p 'dmenu%'"
 
-font pango:FiraCode Nerd Font Mono 18
+font pango:FiraCode Nerd Font Mono 12
 default_border pixel 5
 default_floating_border normal
 focus_follows_mouse no
 
-exec -no-startup-id /home/wsadowski/.config/local_startup/local.sh
+exec -no-startup-id /home/sadowski/.config/local_startup/local.sh
 exec -no-startup-id /usr/bin/gnome-keyring-daemon
 exec -no-startup-id nm-applet
 exec -no-startup-id volumeicon
-exec -no-startup-id xss-lock --transfer-sleep-lock /home/wsadowski/.config/config-git/i3/i3exit.sh lock --nofork
+exec -no-startup-id xss-lock --transfer-sleep-lock /home/sadowski/.config/config-git/i3/i3exit.sh lock --nofork
 exec -no-startup-id redshift
 
 # Workspace 1

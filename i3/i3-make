@@ -2,8 +2,13 @@
 
 # TODO
 # - Primamy monitors
-# - comments in config files
-# - check if works at work
+# - highlight comments in config files
+# - Font add font size vaiable 
+# - add options for speicifing all the things
+# - add configurations saver 
+# - wallpapers with feh
+# - tray
+# - automatic ethernet detection or else
 
 # Path to i3 config
 OUT_PATH="$HOME/.config/config-git/i3/config"
@@ -11,8 +16,9 @@ OUT_PATH="$HOME/.config/config-git/i3/config"
 # System dependant variables and main settings
 TERM_COMMAND="urxvt"
 SPOTIFY_COMMAND="flatpak run com.spotify.Client"
-DMENU_COMMAND="\"dmenu_run -nf '#F8F8F2' -nb '#282A36' -sb '#6272A4' -sf '#F8F8F2' -fn 'monospace-16' -p 'dmenu%'\""
-FONT="pango:FiraCode Nerd Font Mono 18"
+DMENU_COMMAND="\"dmenu_run -nf '#F8F8F2' -nb '#282A36' -sb '#6272A4' -sf
+'#F8F8F2' -fn 'monospace-12' -p 'dmenu%'\""
+FONT="pango:FiraCode Nerd Font Mono 12"
 LOCKER="$HOME/.config/config-git/i3/i3exit.sh"
 MOD="Mod4"
 LOCAL_SCRIPT="$HOME/.config/local_startup/local.sh"

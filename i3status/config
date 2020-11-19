@@ -13,7 +13,7 @@ order += "cpu_temperature 0"
 order += "disk /"
 order += "disk /mnt/data"
 order += "disk /mnt/homedisk"
-order += "ethernet eno1"
+order += "ethernet eth0"
 order += "volume master"
 order += "tztime local"
 
@@ -38,7 +38,7 @@ disk "/mnt/homedisk" {
         format = "<span background='#a1d569'>  %free Free </span>"
 }
 
-ethernet eno1 {
+ethernet eth0 {
         format_up = "<span background='#88c0d0'>  %ip </span>"
         format_down = "<span background='#88c0d0'>  Disconnected </span>"
 }
