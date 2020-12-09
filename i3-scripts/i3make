@@ -1,0 +1,359 @@
+#!/usr/bin/env bash
+
+i3_MAKE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+TMP_OUT="/tmp/i3-config-tmp"
+OUT_PATH="$HOME/.config/config-git/i3/config"
+
+# This was taken from the SpaceVim install script
+Color_off='\033[0m'       # Text Reset
+
+Black='\033[0;30m'        # Black
+Red='\033[0;31m'          # Red
+Green='\033[0;32m'        # Green
+Yellow='\033[0;33m'       # Yellow
+Blue='\033[0;34m'         # Blue
+Purple='\033[0;35m'       # Purple
+Cyan='\033[0;36m'         # Cyan
+White='\033[0;37m'        # White
+
+# Console output functions
+msg()     { printf '%b\n' "$1" >&2; }
+success() { msg "${Green}[✔]${Color_off} ${1}${2}"; }
+info()    { msg "${Blue}[➭]${Color_off} ${1}${2}"; }
+error()   { msg "${Red}[✘]${Color_off} ${1}${2}"; exit 1; }
+warn ()   { msg "${Yellow}[⚠]${Color_off} ${1}${2}"; }
+
+# An array of possible options, all of them are listed in machines.conf under
+# [default] machine
+declare -A configuration
+options_names=("font" "fontsize" "terminal" "music" "dmenu" "locker" \
+  "mod" "local" "wall" "capture" "border" "keyring" "gaps" )
+
+# Expand variables in string
+apply_shell_expansion() {
+    declare data="${1}"
+    declare delimiter="__apply_shell_expansion_delimiter__"
+    declare command="cat <<$delimiter"$'\n'"$data"$'\n'"$delimiter"
+    eval "$command"
+}
+
+# Read machines.conf
+#   $1: name of configuration
+#   $2: machines.conf
+read_machines () {
+  should_read="no"
+  while read line; do
+    case $line in
+      \[*\]) 
+        if [ "$line" = "[$1]" ]; then
+          should_read="yes" 
+        else
+          should_read="no"
+        fi
+        ;;
+      *)
+        if [ "$line" != "" ] && [ "$should_read" = "yes" ]; then
+          key=${line%:*}
+          if [[ " ${options_names[@]} " =~ " ${key} " ]]; then
+            #Strip beggining whitspace
+            value="$(echo -e ${line#*:} | sed -e 's/^[[:space:]]*//')"
+            configuration[${key}]=$(apply_shell_expansion "$value")
+          else
+            warn "Option '${key}' from machine '${1}' not supported."           
+          fi
+        fi
+        ;;
+    esac 
+  done < ${2}
+}
+
+check_configuration () {
+  for i in "${options_names[@]}"
+  do
+    if [ "${configuration["$i"]}" = "" ]; then
+      error "Option '${i}' undefined in configurations array! Check machines.conf."
+    fi
+  done
+}
+
+print_configuration () {
+  # TODO: get the length of the longest option string and use it here to format
+  info "Current options in the configuration array:"
+  printf "    %10s-+-%s\n" "----------" "-----------------------------"
+  for i in "${options_names[@]}"
+  do
+    printf "    %-10s | %s\n" "$i" "${configuration["$i"]}"
+  done
+}
+
+# Create output file and overwrites it if neccesary (warns)
+#   $1 - path to the 
+create_tmp() {
+  if test -f "${1}"; then
+    warn "Overwriting existing tmp file in: " ${1}
+    rm ${1}
+  fi
+  touch ${1}
+}
+
+# Deletes the tmp file 
+#   $1 - path to file
+clean_tmp() { info "Cleaning ..."; rm ${1}; }
+
+create_folder_or_file() {
+  case "$1" in
+    */) mkdir -p $1 ;;
+    *)  touch $1    ;;
+  esac
+}
+
+# Check if folder or file exists and ask if the script should continue
+#   $1 - path
+check_and_ask () {
+  file_name="${1%\"}"
+  file_name="${file_name#\"}"
+  
+  case "$file_name" in
+    /*)
+      if [ -f "$file_name" ] || [ -d "$file_name" ]; then
+        info "Located " $file_name
+      else
+        warn "$file_name" " does not exist!"
+
+        read -p "    Do you want to create it (y/n) [n]: " new_file
+        new_file=${new_file:-n}
+        case "$new_file" in
+          y)
+            create_folder_or_file ${file_name}
+            ;;
+          n)
+            read -p "    Do you want to provide other path (y/n) [y]: " new_path
+            new_path=${new_path:-y}
+            case "$new_path" in 
+              y)
+                read -p "  New path (add '/' for a folder): " actual_path
+                check_and_ask $actual_path
+                ;;
+              n)
+                info "Alright, exiting."
+                exit 0
+                ;;
+              *)
+                error "No such option, exiting"
+                exit 0
+                ;;
+            esac
+            ;;
+          *)
+            error "No such option, exiting"
+            exit 0
+            ;;
+        esac
+      fi
+
+      ;;
+    *)
+      error "Not a valid file path."
+      ;;
+  esac
+}
+
+# Output to the i3 config file
+to_file() { printf '%s\n' "${2}" >> ${1}; }
+to_i3()   { to_file $TMP_OUT "${1}"; }
+comment() { to_file $TMP_OUT "# ${1}"; }
+
+# Set variable
+#   $1 - variable name
+#   $2 - value
+i3set() { to_i3 "set \$${1} ${2}"; }
+
+bindsym() { to_i3 "bindsym $1 $2"; }
+
+# Set workspace
+#   $1 - workspace name
+#   $2 - workspace name
+#   $3 - [Modifier] move focused container to workspace
+#   $4 - [Modifier] move to workspace with focused container
+workspace() {
+  info "Adding workspace $1" 
+  comment "Workspace ${1}"
+  
+  if test -z "${2}"; then
+    i3set "ws${1}" "${1}"
+  else
+    i3set "ws${1}" "${1}|${2}"
+  fi
+
+  # switch to workspace
+  to_i3 "bindsym \$mod+$1       workspace number \$ws$1"
+  # move to workspace
+  to_i3 "bindsym \$mod+$3+$1  move container to workspace \$ws$1"
+  # move with the container
+  to_i3 "bindsym \$mod+$4+$1 move container to workspace \$ws$1; workspace \$ws$1"
+  
+  to_i3 ""
+}
+
+# Bindsym moving containers and changing focus
+#   $1 - left key
+#   $2 - down key
+#   $3 - up key
+#   $4 - right key
+movement() {
+  bindsym "\$mod+$1" "focus left"
+  bindsym "\$mod+$2" "focus down"
+  bindsym "\$mod+$3" "focus up"
+  bindsym "\$mod+$4" "focus right"
+  
+  bindsym "\$mod+Shift+$1" "move left"
+  bindsym "\$mod+Shift+$2" "move down"
+  bindsym "\$mod+Shift+$3" "move up"
+  bindsym "\$mod+Shift+$4" "move right"
+}
+
+# exec --no-startup-id
+e_noid () { to_i3 "exec -no-startup-id $1"; }
+
+# Include another file
+include () { 
+  if [ -f ${1} ]; then
+    to_i3 ""
+    info "Including $1" 
+    cat $1 >> $TMP_OUT
+    to_i3 ""
+  else
+    error "File $1 not found!"
+  fi
+}
+
+show_help () {
+  echo " "
+  echo "    Utility for storing and generation of i3 (gaps) configs for "
+  echo "    different computers, possibly with different hardware and OS."
+  echo " "
+  echo "    Basic usage:"
+  echo "       -m=machine   use options defined for computer 'machine'"
+  echo "  "
+  echo "    Overriding options defined in machine.conf"
+  echo "       -f font      specify font"
+  echo "       -s size      specify font size"
+  echo "       -t command   specify terminal to be used"
+  echo "       -m command   specify music software"
+  echo "       -d command   specify dmenu command to be executed"
+  echo "       -l path      specify path to locking script"
+  echo "       -M modkey    specify mod key for i3"
+  echo "       -L path      specify path to a bash script that will be executed"
+  echo "                    at the startup of i3"
+  echo "       -w path      specify path to folder with wallpapers"
+  echo "       -C path      specify path to folder for storing screenshots"
+  echo "       -b pixels    specify border thickness in pixels"
+  echo "       -k command   specify keyring command run at startup"
+  echo "       -g           use confg options for i3-gaps"
+}
+
+# We use this ones to fill out default options.
+read_machines "default" "${i3_MAKE_DIR}/machines.conf"
+
+OPTIND=1        
+
+# Handle input from the user, here we check only for machine and do nothing for
+# the rest 
+while getopts "m:f:s:t:m:d:lM:L:w:c:b:k:gh?" opt; do
+  case ${opt} in
+    m)      read_machines $OPTARG "${i3_MAKE_DIR}/machines.conf" ;;
+    h|\? )  show_help; exit 1                     ;;
+  esac
+done
+
+#shift $((OPTIND -1))
+
+OPTIND=1        
+# Handle all the other options
+while getopts "m:f:s:t:m:d:lM:L:w:c:b:k:gh?" opt; do
+  case ${opt} in
+    m)      ;;
+    f)      configuration[font]=$OPTARG           ;;
+    s)      configuration[fontsize]=$OPTARG       ;;
+    t)      configuration[terminal]=$OPTARG       ;;
+    m)      configuration[music]=$OPTARG          ;;
+    d)      configuration[dmenu]=$OPTARG          ;;
+    l)      configuration[locker]=$OPTARG         ;;
+    M)      configuration[mod]=$OPTARG            ;;
+    L)      configuration[local]=$OPTARG          ;;
+    w)      configuration[wall]=$OPTARG           ;;
+    C)      configuration[capture]=$OPTARG        ;;
+    b)      configuration[border]=$OPTARG         ;;
+    k)      configuration[keyring]=$OPTARG        ;;
+    g)      configuration[gaps]=yes            ;;
+    h|\? )  show_help; exit 1                     ;;
+  esac
+done
+
+# Print the read configurartion
+check_configuration
+print_configuration 
+
+check_and_ask "${configuration[local]}"
+check_and_ask "${configuration[capture]}"
+
+
+create_tmp $TMP_OUT
+comment 'This file is generated automatically!'
+comment 'Do not edit this file!'
+
+comment "Setting varibles and machine specific things"
+i3set "mod"       "${configuration[mod]}"
+i3set "lock"      "${configuration[locker]}"
+i3set "term"      "${configuration[terminal]}"
+i3set "spotify"   "${configuration[music]}"
+i3set "capture"   "${configuration[capture]}"
+bindsym "\$mod+d" "exec ${configuration[dmenu]}"
+
+to_i3 "font pango:${configuration[font]} ${configuration[fontsize]}"
+to_i3 "default_border pixel ${configuration[border]}"
+to_i3 "default_floating_border normal"
+to_i3 "focus_follows_mouse no"
+
+# TODO Fix that the applets on i3 status
+# TODO Generate primary screens outside of locl script (it is usless it can be
+# in config)
+# TODO Do a wallpaper damn it
+e_noid "${configuration[local]}"
+e_noid "${configuration[keyring]}"
+e_noid "nm-applet"
+e_noid "volumeicon"
+e_noid "xss-lock --transfer-sleep-lock $LOCKER lock --nofork"
+e_noid "redshift"
+
+# Add a blank line for readibility
+to_i3 ""
+
+workspace "1" "" "Ctrl" "Shift"
+workspace "2" "" "Ctrl" "Shift"
+workspace "3" "" "Ctrl" "Shift"
+workspace "4" "" "Ctrl" "Shift"
+workspace "5" "" "Ctrl" "Shift"
+workspace "6" "" "Ctrl" "Shift"
+workspace "7" "Music" "Ctrl" "Shift"
+workspace "8" "Mail" "Ctrl" "Shift"
+
+movement "Left" "Down" "Up" "Right"
+movement "j" "k" "l" "semicolon"
+
+include "${i3_MAKE_DIR}/config_files/audio.i3"
+include "${i3_MAKE_DIR}/config_files/app.i3"
+include "${i3_MAKE_DIR}/config_files/bindsym.i3"
+include "${i3_MAKE_DIR}/config_files/mode_resize.i3"
+include "${i3_MAKE_DIR}/config_files/mode_system.i3"
+include "${i3_MAKE_DIR}/config_files/colors.i3"
+include "${i3_MAKE_DIR}/config_files/bar.i3"
+include "${i3_MAKE_DIR}/config_files/gaps.i3"
+
+
+info "Copying config..."
+cp $TMP_OUT $OUT_PATH
+clean_tmp $TMP_OUT
+success "Done!"
+
